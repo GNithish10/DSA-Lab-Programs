@@ -29,6 +29,7 @@ void bfs(int s)
         {
             queue[++r] = i;
             printf("%d\t", i);
+            v[queue[r]] = 1;
         }
     if (f <= r)
     {
