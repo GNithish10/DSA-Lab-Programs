@@ -9,80 +9,84 @@ collision (if any) using linear probing.
 
 #include <stdio.h>
 #include <stdlib.h>
-typedef struct emp
+typedef struct employee
 {
-    int empno;
+    int id;
     char name[20];
     int sal;
-} EMPLOYEE;
+} EMP;
+EMP emp[10];
+int a[10], empID[10], count = 0;
+int getemp(EMP emp[], int key, int ID)
+{
+    FILE *fp;
+    fp = fopen("out.txt", "a+");
+    emp[key].id = ID;
+    printf("\nEnter employee name and salary:\n");
+    scanf("%s%d", emp[key].name, &emp[key].sal);
+    fprintf(fp, "\n%d\t%s\t%d", emp[key].id, emp[key].name, emp[key].sal);
+    fclose(fp);
+    return key;
+}
+void display()
+{
+    int i;
+    printf("\nKey\tID\tName\tSalary");
+    for (i = 0; i < 10; i++)
+        if (a[i] != -1)
+            printf("\n%d\t%d\t%s\t%d", i, emp[i].id, emp[i].name, emp[i].sal);
+}
+void probe(int key, int ID)
+{
+    int i = key, flag = 0;
+    if (count == 10)
+    {
+        printf("Hash table is full.\n");
+        exit(0);
+    }
+    if (a[key] == -1)
+    {
+        a[key] = getemp(emp, key, ID);
+        display();
+        count++;
+    }
+    else
+    {
+        printf("\nCollision detected. Solving it with linear probing...\n");
+        while (a[i] != -1)
+        {
+            i++;
+            if (i == 10)
+            {
+                i = 0;                        // 1st change made here
+                while (i < key && a[i] != -1) // 2nd change made here
+                    i++;
+            }
+        }
+        a[i] = getemp(emp, i, ID);
+        printf("\nCollision problem solved! Hash table:\n");
+        display();
+        count++;
+    }
+}
 void main()
 {
-    EMPLOYEE E;
-    FILE *fp;
-    int n, i, s = (2 * sizeof(int) + 20), minusone = -1, choice, flag, index, indexcopy, id;
-    printf("Enter number of records:\n");
-    scanf("%d", &n);
-    fp = fopen("emp.txt", "w+");
-    for (i = 0; i < n; i++)
+    int key, i, j = 0, ans = 1;
+    for (i = 0; i < 10; i++)
+        a[i] = -1;
+    do
     {
-        fwrite(&minusone, sizeof(int), 1, fp);
-        fseek(fp, s - sizeof(int), SEEK_CUR);
-    }
-    while (1)
-    {
-        printf("Enter\n1. Add Record\n2. Display Records\n3. Exit\n");
-        scanf("%d", &choice);
-        flag = 0;
-        switch (choice)
-        {
-        case 1:
-            printf("Enter Employee number, Employee name and Salary:\n");
-            scanf("%d%s%d", &E.empno, E.name, &E.sal);
-            // Hash function
-            index = indexcopy = (E.empno % n);
-            fseek(fp, s * index, SEEK_SET);
-            fread(&id, sizeof(int), 1, fp);
-            // Linear Probing
-            while (id != -1)
-            {
-                index++;
-                fseek(fp, s * index, SEEK_SET);
-                flag = 1;
-                if (index == n)
-                    index = 0;
-                if (index == indexcopy)
-                {
-                    printf("FILE FULL!!\n");
-                    break;
-                }
-                fread(&id, sizeof(int), 1, fp);
-            }
-            if (!((index == indexcopy) && flag))
-            {
-                fseek(fp, s * index, SEEK_SET);
-                fwrite(&E, sizeof(EMPLOYEE), 1, fp);
-            }
-            break;
-        case 2:
-            printf("Records are:\n");
-            for (index = 0; index < n; index++)
-            {
-                fseek(fp, s * index, SEEK_SET);
-                fread(&E.empno, sizeof(int), 1, fp);
-                printf("%d\t", E.empno);
-                if (E.empno != -1)
-                {
-                    fread(E.name, 20, 1, fp);
-                    fread(&E.sal, sizeof(int), 1, fp);
-                    printf("%s\t%d\n", E.name, E.sal);
-                }
-                else
-                    printf("\n");
-            }
-            break;
-        case 3:
-            fclose(fp);
-            exit(0);
-        }
-    }
+        printf("\nEnter the employee ID: ");
+        scanf("%d", &empID[j]);
+        key = empID[j] % 10;
+        probe(key, empID[j]);
+        printf("\n\nDo you want to continue the input? (1=Yes | 0=No): ");
+        scanf("%d", &ans);
+        j++;
+    } while (ans);
+    display(emp);
+    for (i = 0; i < 10; i++)
+        if (a[i] != -1)
+            printf(" \t%d", a[i]);
+    printf("\n");
 }
